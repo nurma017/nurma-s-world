@@ -1,1 +1,0 @@
-# nurma-s-world
