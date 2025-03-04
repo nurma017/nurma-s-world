@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Plan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="hero hero-recipe-plan">
+    <div class="container">
+        <h1>Your Personalized Recipe Plan</h1>
+        <h3>Preferences</h3>
+        <p>Dietary Restrictions: {{ preferences.dietary_restrictions }}</p>
+        <p>Favorite Cuisine: {{ preferences.favorite_cuisine }}</p>
+        <p>Meals per Week: {{ preferences.meals_per_week }}</p>
+
+        <h3>Recipes</h3>
+        {% if recipes %}
+            <ul>
+                {% for recipe in recipes %}
+                    <li><strong>{{ recipe.recipe_name }}</strong>: {{ recipe.ingredients }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No recipes entered yet.</p>
+        {% endif %}
+
+        <a href="/recipe_input"><button>Add More Recipes</button></a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Recipes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="hero hero-recipe-input">
+    <div class="container">
+        <h1>Add Your Recipes</h1>
+        <form action="/recipe_input" method="post">
+            <label>Recipe Name:</label>
+            <input type="text" name="recipe_name" required>
+            <label>Ingredients:</label>
+            <textarea name="ingredients" required></textarea>
+            <button type="submit">Add Recipe</button>
+        </form>
+        <a href="/recipe_plan"><button class="right-button">View Recipe Plan</button></a>
+    </div>
+</body>
+</html>
