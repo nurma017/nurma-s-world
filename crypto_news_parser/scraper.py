@@ -1,22 +1,38 @@
 import asyncio
 from playwright.async_api import async_playwright
 
-async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        page = await browser.new_page()
-        await page.goto("https://www.coingecko.com/en/news", timeout=90000)
+allowed_cryptos = {
+    "BTC": "bitcoin", "ETH": "ethereum", "ADA": "cardano", "XRP": "xrp",
+    "DOGE": "dogecoin", "LTC": "litecoin", "BNB": "binancecoin",
+    "SOL": "solana", "DOT": "polkadot", "AVAX": "avalanche"
+}
 
-        await page.wait_for_load_state('networkidle')
+async def get_news(symbol):
+    symbol = symbol.upper()
+    if symbol not in allowed_cryptos:
+        raise ValueError(f"❌ '{symbol}' not supported")
+
+    url = f"https://www.coingecko.com/en/coins/{allowed_cryptos[symbol]}/news"
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto(url, timeout=60000)
+        await page.wait_for_timeout(5000)
 
         articles = await page.locator("a.tw-block").all()
-        print(f"✅ Найдено статей: {len(articles)}\n")
+        if not articles:
+            print("❌ Статьи не найдены.")
+            return []
 
-        for article in articles[:10]:
+        news_data = []
+        for article in articles[:5]:
             title = await article.inner_text()
-            link = await article.get_attribute('href')
-            print(f"{title.strip()}\nhttps://www.coingecko.com{link.strip()}\n")
+            href = await article.get_attribute("href")
+            news_data.append({
+                "title": title.strip(),
+                "url": "https://www.coingecko.com" + href.strip()
+            })
 
         await browser.close()
-
-asyncio.run(main())
+        return news_data
