@@ -7,7 +7,6 @@ from telegram.request import HTTPXRequest
 request = HTTPXRequest(connect_timeout=10.0, read_timeout=10.0)
 
 app = Application.builder().token(TOKEN).request(request).build()
-
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("config", config))
