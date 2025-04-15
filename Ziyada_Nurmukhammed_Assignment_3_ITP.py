@@ -1,0 +1,99 @@
+import requests
+from bs4 import BeautifulSoup
+import json
+import csv
+from typing import List, Dict, Optional
+
+# Keywords for filtering by cryptocurrency
+SUPPORTED_CRYPTO = [
+    "BTC", "ETH", "ADA", "XRP", "DOGE", "LTC", "BNB", "SOL", "DOT", "AVAX"
+]
+
+CRYPTO_KEYWORDS = {
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "ADA": "cardano",
+    "XRP": "xrp",
+    "DOGE": "dogecoin",
+    "LTC": "litecoin",
+    "BNB": "binance",
+    "SOL": "solana",
+    "DOT": "polkadot",
+    "AVAX": "avalanche"
+}
+
+
+def fetch_google_news(crypto_keyword: str) -> List[Dict[str, str]]:
+    """
+    Fetch Google News articles for a given keyword.
+    """
+    query = crypto_keyword + "+when:7d"
+    url = f"https://news.google.com/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+    print(f"{crypto_keyword} → status code: {response.status_code}")
+
+    if response.status_code != 200:
+        print(f"Failed to fetch news for {crypto_keyword}")
+        return []
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    articles = []
+    items = soup.select("article")
+
+    for item in items:
+        title_tag = item.find("h3") or item.find("h4") or item.find("a")
+        if not title_tag:
+            continue
+
+        link_tag = title_tag.find("a") if title_tag.name != "a" else title_tag
+        if not link_tag or not link_tag.get("href"):
+            continue
+
+        title = link_tag.get_text(strip=True)
+        href = link_tag["href"]
+        if href.startswith("/"):
+            link = "https://news.google.com" + href[1:]
+        else:
+            link = href
+
+        articles.append({
+            "title": title,
+            "link": link,
+            "date": "Unknown",
+            "description": title
+        })
+
+        if len(articles) >= 5:
+            break
+
+    return articles
+
+
+def save_news(articles: List[Dict[str, str]], filename: str, file_format: str = "json") -> None:
+    if file_format == "json":
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(articles, f, indent=4)
+    elif file_format == "csv":
+        with open(filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["title", "link", "date", "description"])
+            writer.writeheader()
+            writer.writerows(articles)
+    else:
+        raise ValueError("Unsupported file format. Use 'json' or 'csv'.")
+
+
+def main():
+    for symbol in SUPPORTED_CRYPTO:
+        keyword = CRYPTO_KEYWORDS[symbol]
+        articles = fetch_google_news(keyword)
+        print(f"News for {symbol}:", json.dumps(articles, indent=4))
+        save_news(articles, f"crypto_news_{symbol}.json", "json")
+        save_news(articles, f"crypto_news_{symbol}.csv", "csv")
+
+if __name__ == "__main__":
+    main()
